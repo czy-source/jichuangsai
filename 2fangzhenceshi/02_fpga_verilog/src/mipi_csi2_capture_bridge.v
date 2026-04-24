@@ -93,6 +93,9 @@ module mipi_csi2_capture_bridge (
                 dropped_payload_packets <= dropped_payload_packets + 16'd1;
             end
 
+            // Fallback mode:
+            // if upstream does not provide FS/FE short packets, stream still passes
+            // using payload packet boundaries.
             if (payload_valid && (payload_dt == DT_RGB888) &&
                 (frame_active || !use_short_sync)) begin
                 out_en   <= 1'b1;
