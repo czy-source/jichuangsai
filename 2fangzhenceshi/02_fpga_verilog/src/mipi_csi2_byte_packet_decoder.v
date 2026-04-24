@@ -176,10 +176,18 @@ module mipi_csi2_byte_packet_decoder (
 
                 ST_CRC: begin
                     if (in_pkt_valid) begin
-                        if (crc_cnt == 2'd1) begin
-                            state <= ST_IDLE;
+                        if (in_pkt_start) begin
+                            // Re-sync to a new packet boundary.
+                            protocol_error <= 1'b1;
+                            hdr_byte0 <= in_pkt_data;
+                            hdr_cnt   <= 2'd1;
+                            state     <= ST_HEADER;
                         end else begin
-                            crc_cnt <= crc_cnt + 2'd1;
+                            if (crc_cnt == 2'd1) begin
+                                state <= ST_IDLE;
+                            end else begin
+                                crc_cnt <= crc_cnt + 2'd1;
+                            end
                         end
                     end
 
