@@ -35,7 +35,6 @@ module mipi_csi2_capture_bridge (
     wire [1:0]  payload_vc;
     wire        protocol_error;
 
-    reg use_short_sync;
     reg fs_pending;
 
     mipi_csi2_byte_packet_decoder u_pkt_dec (
@@ -69,16 +68,11 @@ module mipi_csi2_capture_bridge (
 
             frame_active            <= 1'b0;
             dropped_payload_packets <= 16'd0;
-            use_short_sync          <= 1'b0;
             fs_pending              <= 1'b0;
         end else begin
             out_vsync <= 1'b0;
             out_hsync <= 1'b0;
             out_en    <= 1'b0;
-
-            if (fs_pulse || fe_pulse) begin
-                use_short_sync <= 1'b1;
-            end
 
             if (fs_pulse) begin
                 frame_active <= 1'b1;
@@ -93,11 +87,8 @@ module mipi_csi2_capture_bridge (
                 dropped_payload_packets <= dropped_payload_packets + 16'd1;
             end
 
-            // Fallback mode:
-            // if upstream does not provide FS/FE short packets, stream still passes
-            // using payload packet boundaries.
-            if (payload_valid && (payload_dt == DT_RGB888) &&
-                (frame_active || !use_short_sync)) begin
+            // This bridge expects standard CSI-2 FS/FE short packets to mark frame scope.
+            if (payload_valid && (payload_dt == DT_RGB888) && frame_active) begin
                 out_en   <= 1'b1;
                 out_data <= payload_byte;
 

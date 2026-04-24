@@ -166,7 +166,7 @@ module mipi_csi2_byte_packet_decoder (
 
                             wc_rem <= wc_rem - 16'd1;
 
-                            if (wc_rem <= 16'd1) begin
+                            if (wc_rem == 16'd1) begin
                                 crc_cnt <= 2'd0;
                                 state   <= ST_CRC;
                             end
