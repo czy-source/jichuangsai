@@ -98,7 +98,7 @@ module mipi_csi2_capture_bridge (
                 out_en   <= 1'b1;
                 out_data <= payload_byte;
 
-                if (payload_first || ls_pulse) begin
+                if (payload_first) begin
                     out_hsync <= 1'b1;
                 end
 
@@ -111,4 +111,3 @@ module mipi_csi2_capture_bridge (
     end
 
 endmodule
-

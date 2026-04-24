@@ -105,14 +105,18 @@ module mipi_csi2_byte_packet_decoder (
                         hdr_byte0 <= in_pkt_data;
                         hdr_cnt   <= 2'd1;
                         state     <= ST_HEADER;
-                    end else if (in_pkt_valid && !in_pkt_start) begin
-                        protocol_error <= 1'b1;
                     end
                 end
 
                 ST_HEADER: begin
                     if (in_pkt_valid) begin
-                        if (hdr_cnt == 2'd1) begin
+                        if (in_pkt_start) begin
+                            // Re-sync to a new packet boundary.
+                            protocol_error <= 1'b1;
+                            hdr_byte0 <= in_pkt_data;
+                            hdr_cnt   <= 2'd1;
+                            state     <= ST_HEADER;
+                        end else if (hdr_cnt == 2'd1) begin
                             hdr_byte1 <= in_pkt_data;
                             hdr_cnt   <= 2'd2;
                         end else if (hdr_cnt == 2'd2) begin
@@ -148,18 +152,26 @@ module mipi_csi2_byte_packet_decoder (
 
                 ST_PAYLOAD: begin
                     if (in_pkt_valid) begin
-                        payload_valid <= 1'b1;
-                        payload_byte  <= in_pkt_data;
-                        payload_first <= (wc_rem == wc_total);
-                        payload_last  <= (wc_rem == 16'd1);
+                        if (in_pkt_start) begin
+                            // Unexpected packet boundary inside payload.
+                            protocol_error <= 1'b1;
+                            hdr_byte0 <= in_pkt_data;
+                            hdr_cnt   <= 2'd1;
+                            state     <= ST_HEADER;
+                        end else begin
+                            payload_valid <= 1'b1;
+                            payload_byte  <= in_pkt_data;
+                            payload_first <= (wc_rem == wc_total);
+                            payload_last  <= (wc_rem == 16'd1);
 
-                        if (wc_rem != 16'd0) begin
-                            wc_rem <= wc_rem - 16'd1;
-                        end
+                            if (wc_rem != 16'd0) begin
+                                wc_rem <= wc_rem - 16'd1;
+                            end
 
-                        if (wc_rem == 16'd1) begin
-                            crc_cnt <= 2'd0;
-                            state   <= ST_CRC;
+                            if (wc_rem == 16'd1) begin
+                                crc_cnt <= 2'd0;
+                                state   <= ST_CRC;
+                            end
                         end
                     end
                 end
@@ -184,4 +196,3 @@ module mipi_csi2_byte_packet_decoder (
     end
 
 endmodule
-
