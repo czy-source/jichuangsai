@@ -83,7 +83,8 @@ module mipi_csi2_capture_bridge (
                 fs_pending   <= 1'b0;
             end
 
-            if (payload_valid && payload_first && (payload_dt != DT_RGB888)) begin
+            if (payload_valid && payload_first &&
+                ((payload_dt != DT_RGB888) || !frame_active)) begin
                 if (dropped_payload_packets != 16'hFFFF) begin
                     dropped_payload_packets <= dropped_payload_packets + 16'd1;
                 end

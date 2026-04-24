@@ -158,7 +158,7 @@ module mipi_csi2_byte_packet_decoder (
                             hdr_byte0 <= in_pkt_data;
                             hdr_cnt   <= 2'd1;
                             state     <= ST_HEADER;
-                        end else if (wc_rem != 16'd0) begin
+                        end else if (wc_rem > 16'd0) begin
                             payload_valid <= 1'b1;
                             payload_byte  <= in_pkt_data;
                             payload_first <= (wc_rem == wc_total);
